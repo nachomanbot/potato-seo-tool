@@ -1,0 +1,2045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Performance Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --bg-color: #f4f4f4;
+            --container-bg-color: #fff;
+            --text-color: #333;
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --secondary-color: #6c757d;
+            --secondary-hover-color: #5a6268;
+            --header-color: #0056b3;
+            --border-color: #ddd;
+            --table-header-bg: #007bff;
+            --table-header-text: white;
+            --green-bg: #D9EAD3;
+            --orange-bg: #FFF2CC;
+            --red-bg: #F4CCCC;
+            --tab-text: #555;
+            --tab-active-border: #007bff;
+            --score-green: #28a745;
+            --score-orange: #fd7e14;
+            --score-red: #dc3545;
+            --score-text-light: #111;
+            --score-text-dark: #fff;
+            --code-bg-light: #e9ecef;
+            --code-text-light: #212529;
+        }
+
+        .dark-mode {
+            /* Dark Mode Colors */
+            --bg-color: #121212;
+            --container-bg-color: #1e1e1e;
+            --text-color: #f5f5f5;
+            --primary-color: #8bb7f0;
+            --primary-hover-color: #5b90d2;
+            --secondary-color: #555;
+            --secondary-hover-color: #444;
+            --header-color: #8bb7f0;
+            --border-color: #333;
+            --table-header-bg: #343a40;
+            --table-header-text: #f5f5f5;
+            --green-bg: #274730;
+            --orange-bg: #605021;
+            --red-bg: #5a2c2c;
+            --tab-text: #ccc;
+            --tab-active-border: #8bb7f0;
+            --score-green: #30c85a;
+            --score-orange: #ff983d;
+            --score-red: #f15261;
+            --score-text-light: #fff;
+            --score-text-dark: #fff;
+            --code-bg-light: #2b2b2b;
+            --code-text-light: #f5f5f5;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 15px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 95%;
+            margin: auto;
+            background: var(--container-bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        h1, h2 {
+            color: var(--header-color);
+            display: flex;
+            align-items: center;
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        h1 .fa-chart-line {
+            margin-right: 15px;
+        }
+        h2 .fas, h2 .fa-solid {
+            margin-right: 10px;
+        }
+        .potato-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        .data-input-section textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+            font-size: 13px;
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .data-input-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            transition: background-color 0.3s ease, opacity 0.3s ease;
+        }
+        .btn:hover {
+            background-color: var(--primary-hover-color);
+        }
+        .btn:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .btn:disabled:hover {
+            background-color: var(--secondary-color);
+        }
+        .btn i {
+            margin-left: 8px;
+        }
+        #recommended-pages-table, #topics-table, #keyword-opportunities-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        #recommended-pages-table th, #recommended-pages-table td, 
+        #topics-table th, #topics-table td,
+        #keyword-opportunities-table th, #keyword-opportunities-table td {
+            border: 1px solid var(--border-color);
+            padding: 12px 8px;
+            text-align: left;
+            transition: border-color 0.3s;
+            vertical-align: top;
+        }
+        #recommended-pages-table th, #keyword-opportunities-table th {
+            background-color: var(--table-header-bg);
+            color: var(--table-header-text);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        #recommended-pages-table th[data-column],
+        #keyword-opportunities-table th[data-column] {
+            cursor: pointer;
+            position: relative;
+        }
+        #recommended-pages-table th[data-column]:hover,
+        #keyword-opportunities-table th[data-column]:hover {
+            opacity: 0.9;
+        }
+        .sort-icon {
+            margin-left: 8px;
+            opacity: 0.5;
+            font-size: 0.9em;
+        }
+        .sort-icon.active {
+            opacity: 1;
+            color: #ffc107;
+        }
+        #topics-table th {
+            background-color: #28a745;
+            color: white;
+        }
+        .priority-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .green-priority { background-color: var(--green-bg); }
+        .orange-priority { background-color: var(--orange-bg); }
+        .red-priority { background-color: var(--red-bg); }
+        .loader-container {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .progress-bar-container {
+            width: 80%;
+            height: 20px;
+            background-color: var(--border-color);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px auto;
+            transition: background-color 0.3s;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: var(--primary-color);
+            transition: width 0.3s linear, background-color 0.3s;
+        }
+        .progress-text {
+            font-weight: bold;
+            color: var(--text-color);
+            font-size: 15px;
+            transition: color 0.3s;
+        }
+        ol {
+            padding-left: 25px;
+        }
+        ol li {
+            margin-bottom: 8px;
+        }
+        .tab-menu {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            transition: border-bottom-color 0.3s;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 1.1em;
+            color: var(--tab-text);
+            font-weight: bold;
+            transition: color 0.3s, border-bottom 0.3s;
+        }
+        .tab-btn.active {
+            color: var(--tab-active-border);
+            border-bottom: 3px solid var(--tab-active-border);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: var(--container-bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+        .low-competition { background-color: var(--green-bg); }
+        .medium-competition { background-color: var(--orange-bg); }
+        .high-competition { background-color: var(--red-bg); }
+        ul {
+            padding-left: 20px;
+            margin: 5px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-style: italic;
+            color: var(--tab-text);
+            transition: color 0.3s;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 0.9em;
+        }
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .refresh-btn {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        .refresh-btn:hover {
+            background-color: var(--secondary-hover-color);
+        }
+        .score-bar-container {
+            width: 100%;
+            min-width: 120px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            height: 22px;
+            overflow: hidden;
+        }
+        .score-bar {
+            height: 100%;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 13px;
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+            transition: width 0.5s ease-in-out;
+            color: var(--score-text-dark);
+        }
+        .dark-mode .score-bar {
+             color: var(--score-text-light);
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            /* FIXED: Increased gap to prevent icon overlap */
+            gap: 30px;
+        }
+        .toggle-switch-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        .toggle-switch-container .fa-sun,
+        .toggle-switch-container .fa-moon {
+            font-size: 1.2em;
+            color: var(--text-color);
+            transition: color 0.3s;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .toggle-switch-container .fa-sun {
+            left: -25px;
+        }
+        .toggle-switch-container .fa-moon {
+            right: -25px;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 25px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(25px);
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            min-height: 300px;
+            width: 100%;
+        }
+        .summary-placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            background-color: var(--bg-color);
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            margin-top: 20px;
+            color: var(--tab-text);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        .summary-placeholder p {
+            margin: 5px 0 0 0;
+            font-size: 1.1em;
+        }
+        .summary-placeholder i {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+        .section h2[onclick] {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: opacity 0.2s ease;
+        }
+        .section h2[onclick]:hover {
+            opacity: 0.8;
+        }
+        .toggle-icon {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #summary-content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        @media (min-width: 992px) {
+            #summary-content-grid {
+                grid-template-columns: 1fr 1.5fr;
+            }
+        }
+        .kpi-card-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 576px) {
+            .kpi-card-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media (min-width: 992px) {
+             .kpi-card-container {
+                grid-template-columns: 1fr;
+            }
+        }
+         @media (min-width: 1200px) {
+             .kpi-card-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            #summary-content-grid {
+                 grid-template-columns: 1.2fr 1fr;
+            }
+        }
+        .kpi-card {
+            background-color: var(--bg-color);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .kpi-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 1em;
+            color: var(--secondary-color);
+            font-weight: normal;
+        }
+        .kpi-card p {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: bold;
+            color: var(--header-color);
+        }
+        #seo-analysis-summary-text h3 {
+             color: var(--header-color);
+             margin-top:0;
+       }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+        .section-header h2 {
+            margin-bottom: 0; 
+        }
+        .tutorial-btn {
+            padding: 6px 14px; 
+            font-size: 14px; 
+            margin-left: 20px;
+        }
+        .tutorial-btn i {
+            margin-left: 6px; 
+        }
+        .schema-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .schema-form-container {
+            flex: 1;
+            min-width: 300px;
+        }
+        .schema-code-container {
+            flex: 1.5;
+            min-width: 300px;
+        }
+        .schema-code-container h3 {
+            margin-top: 0;
+        }
+        .schema-code-output {
+            background-color: var(--code-bg-light);
+            color: var(--code-text-light);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            height: 500px;
+            overflow: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            font-size: 12px;
+            background-color: var(--secondary-color);
+        }
+        .copy-btn:hover {
+            background-color: var(--secondary-hover-color);
+        }
+        .schema-form-group {
+            display: none;
+        }
+        .schema-form-group.active {
+            display: block;
+        }
+        .dynamic-item {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background-color: var(--bg-color);
+        }
+        .dynamic-item.social-item {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+        }
+        .social-item input {
+            flex-grow: 1;
+        }
+        .remove-btn {
+            background-color: var(--score-red);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+        }
+        .dynamic-item.social-item .remove-btn {
+             margin-top: 0;
+        }
+        .remove-btn:hover {
+            opacity: 0.8;
+        }
+        .opening-hours-day {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .opening-hours-day:last-child {
+            border-bottom: none;
+        }
+        .opening-hours-day label {
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+        }
+        .opening-hours-day input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .hours-inputs {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .hours-inputs input[type="time"] {
+            padding: 5px;
+        }
+        .recommendation-card {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .recommendation-card h4 {
+            margin-top: 0;
+            color: var(--header-color);
+            display: flex;
+            align-items: center;
+            font-size: 1.2em;
+        }
+        .recommendation-card h4 i {
+            margin-right: 12px;
+            font-size: 1.1em;
+        }
+        .recommendation-card p {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h1><img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExcXY1OXZwZ2I3dGt3bHRhN2VrN291bjVldnA1M3I2MGIxcDM3amxiNyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N0kuPI2zChx5Qg3pam/giphy.gif" alt="Animated Potato Icon" class="potato-icon"> Sweet Potato SEO Tool </h1>
+        <div class="header-actions">
+            <div class="toggle-switch-container">
+                <i class="fas fa-sun"></i>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="darkModeToggle">
+                    <span class="slider"></span>
+                </label>
+                <i class="fas fa-moon"></i>
+            </div>
+            <button class="refresh-btn" onclick="location.reload()">Refresh <i class="fas fa-sync-alt"></i></button>
+        </div>
+    </div>
+    <p>Your all-in-one tool for SEO performance analysis, Content Ideation, and Schema Generator.</p>
+
+    <div class="tab-menu">
+        <button class="tab-btn active" onclick="openTab('dashboard')"><i class="fa-solid fa-gauge"></i> Performance Dashboard</button>
+        <button class="tab-btn" onclick="openTab('topics')"><i class="fa-solid fa-lightbulb"></i> Topic Opportunities</button>
+        <button class="tab-btn" onclick="openTab('schema')"><i class="fa-solid fa-code"></i> Schema Generator</button>
+    </div>
+
+    <div id="dashboard" class="tab-content active">
+        <div class="section">
+            <h2><i class="fa-solid fa-magnifying-glass-chart"></i> What is this Tool?</h2>
+            <p>The Performance Dashboard analyzes your Google Search Console (GSC) data to uncover high-impact and data driven-optimization opportunities. By pasting your data, you can quickly identify pages and keywords with the greatest potential for growth and receive clear, actionable recommendations to boost your organic traffic. 📈</p>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-circle-info"></i> How to Use</h2>
+                <a href="https://www.awesomescreenshot.com/video/44479330?key=8b436fa41906d7c3a64d7d7ec6424723" target="_blank" rel="noopener noreferrer" class="btn tutorial-btn">
+                    ► PLAY<i class="fa-solid fa-play-circle"></i>
+                </a>
+            </div>
+            <p>Follow these steps to get an instant SEO analysis and optimization recommendations for your website.</p>
+            <ol>
+                <li>
+                    <strong>Get Your Data from Google Search Console:</strong>
+                    <p>Go to Google Search Console (GSC) > Performance. Select your desired date range. 
+                    </p>
+                </li>
+                <li>
+                    <strong>Export and Copy Page and Query Data:</strong>
+                    <a href="https://www.awesomescreenshot.com/video/44514451?key=e2460d748b795282d01c3b93c7985975" target="_blank" rel="noopener noreferrer" class="btn tutorial-btn">
+                        ► How to Filter <i class="fa-solid fa-filter"></i>
+                    </a>
+                    <p>Export the data from both the "Pages" tab and the "Queries" tab in GSC. 
+                    </p>
+                </li>
+                <li>
+                    <strong>Paste into the Correct Textboxes:</strong>
+                    <p>Return here and paste the copied data into the corresponding boxes below. Both are required. 
+                    </p>
+                </li>
+                <li>
+                    <strong>Analyze:</strong>
+                    <p>Click "Analyze Data" and your full report, including summary and chart, will be generated automatically. 
+                    </p>
+                </li>
+            </ol>
+        </div>
+
+        <div class="section data-input-section">
+            <h2><i class="fa-solid fa-file-arrow-up"></i> Input GSC Metrics</h2>
+            <p>Please paste your exported tables from GSC below. *Both fields are required to run the analysis.*</p>
+
+            <label for="gsc-data-pages">GSC Page Data (Requires: <code>Top pages</code>, <code>Clicks</code>, <code>Impressions</code>, <code>Position</code>)</label>
+            <textarea id="gsc-data-pages" placeholder="Paste your page data here..."></textarea>
+
+            <label for="gsc-data-queries">GSC Query Data (Requires: <code>Top queries</code>, <code>Clicks</code>, <code>Impressions</code>, <code>Position</code>)</label>
+            <textarea id="gsc-data-queries" placeholder="Paste your query/keyword data here..."></textarea>
+
+            <button id="analyze-btn" class="btn" onclick="startCombinedAnalysis()" disabled>Analyze Data <i class="fa-solid fa-magnifying-glass-chart"></i></button>
+        </div>
+
+        <div id="loader-container" class="loader-container">
+            <p>Analyzing data...</p>
+            <div id="progress-bar-container" class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="progress-text" class="progress-text">0%</div>
+        </div>
+
+        <div class="section" id="recommended-pages-section" style="display: none;">
+            <h2 onclick="toggleSection('recommended-pages-content', this.querySelector('.toggle-icon'))"><i class="fa-solid fa-rocket"></i> Recommended Pages to Optimize <span class="toggle-icon">+</span></h2>
+            <div id="recommended-pages-content" style="display: none;">
+                <div style="margin-bottom: 15px; margin-top: 15px;">
+                    <h4>Color Code Meaning:</h4>
+                    <p>
+                        <span class="priority-color green-priority"></span> (Green) Highest Priority - High opportunity score. Optimize these first. 
+                    </p>
+                    <p>
+                        <span class="priority-color orange-priority"></span> (Orange) Middle Priority - Good opportunity score. Solid potential. 
+                    </p>
+                    <p>
+                        <span class="priority-color red-priority"></span> (Red) Lowest Priority - Lower opportunity score. Tackle these later. 
+                    </p>
+                </div>
+
+                <table id="recommended-pages-table">
+                    <thead>
+                        <tr>
+                            <th data-column="item" data-type="string">Page <span class="sort-icon"></span></th>
+                            <th data-column="clicks" data-type="number">Clicks <span class="sort-icon"></span></th>
+                            <th data-column="impressions" data-type="number">Impressions <span class="sort-icon"></span></th>
+                            <th data-column="position" data-type="number">Average Position <span class="sort-icon"></span></th>
+                            <th data-column="opportunityScore" data-type="percent">Opportunity Score <span class="sort-icon"></span></th>
+                            <th>Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recommendation-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section" id="keyword-opportunities-section" style="display: none;">
+             <h2 onclick="toggleSection('keyword-opportunities-content', this.querySelector('.toggle-icon'))"><i class="fa-solid fa-key"></i> Keyword Opportunities <span class="toggle-icon">+</span></h2>
+            <div id="keyword-opportunities-content" style="display: none;">
+                 <div style="margin-bottom: 15px; margin-top: 15px;">
+                    <h4>Color Code Meaning:</h4>
+                    <p>
+                        <span class="priority-color green-priority"></span> (Green) Highest Priority - High opportunity score. Quick wins here. 
+                    </p>
+                    <p>
+                        <span class="priority-color orange-priority"></span> (Orange) Middle Priority - "Striking distance" keywords. Good potential. 
+                    </p>
+                    <p>
+                        <span class="priority-color red-priority"></span> (Red) Lowest Priority - Potential content gaps. Lower potential. 
+                    </p>
+                </div>
+
+                <table id="keyword-opportunities-table">
+                    <thead>
+                        <tr>
+                            <th data-column="item" data-type="string">Keyword <span class="sort-icon"></span></th>
+                            <th data-column="clicks" data-type="number">Clicks <span class="sort-icon"></span></th>
+                            <th data-column="impressions" data-type="number">Impressions <span class="sort-icon"></span></th>
+                            <th data-column="position" data-type="number">Average Position <span class="sort-icon"></span></th>
+                            <th data-column="opportunityScore" data-type="percent">Opportunity Score <span class="sort-icon"></span></th>
+                            <th>Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keyword-recommendation-list">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+       
+        <div class="section" id="summary-section" style="display: none;">
+            <h2><i class="fa-solid fa-file-invoice"></i> SEO Analysis Summary</h2>
+            <p>This summary provides a visual overview and an expert analysis of your GSC data, highlighting key takeaways and a clear action plan.</p>
+           
+            <div id="summary-placeholder" class="summary-placeholder">
+                <i class="fa-solid fa-chart-pie fa-2x"></i>
+                <p><strong>Your report is waiting!</strong></p>
+                <p>Paste your GSC data above and click "Analyze Data" to generate your chart and expert review.</p>
+            </div>
+           
+            <div id="summary-content-grid" style="display: none;">
+                <div id="summary-visuals">
+                    <div class="kpi-card-container">
+                        <div class="kpi-card">
+                            <h4><i class="fa-solid fa-hand-pointer"></i> Total Clicks</h4>
+                            <p id="kpi-clicks">0</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h4><i class="fa-solid fa-eye"></i> Total Impressions</h4>
+                            <p id="kpi-impressions">0</p>
+                        </div>
+                        <div class="kpi-card">
+                            <h4><i class="fa-solid fa-chart-line"></i> Average CTR</h4>
+                            <p id="kpi-ctr">0%</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="seoChart"></canvas>
+                    </div>
+                </div>
+                <div id="seo-analysis-summary-text">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="topics" class="tab-content">
+        <div class="section">
+            <h2><i class="fa-solid fa-lightbulb"></i> Generate Topic Opportunities</h2>
+            <p>Find new content ideas with high keyword potential. Just select your niche and target location, and we'll do the rest! 💡</p>
+            <div class="form-group">
+                <label for="niche">Select your Niche:</label>
+                <select id="niche">
+                    <option value="digital marketing">Digital Marketing</option>
+                    <option value="real estate">Real Estate</option>
+                    <option value="health and wellness">Health and Wellness</option>
+                    <option value="lifestyle">Lifestyle</option>
+                    <option value="technology">Technology</option>
+                    <option value="travel">Travel</option>
+                    <option value="food and cooking">Food and Cooking</option>
+                    <option value="home improvement">Home Improvement</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="location">Target Location (Optional):</label>
+                <input type="text" id="location" placeholder="e.g., New York, Los Angeles, Sarasota or leave blank for global">
+            </div>
+            <button class="btn" onclick="startTopicGeneration()">Generate Topics <i class="fa-solid fa-wand-magic-sparkles"></i></button>
+        </div>
+
+        <div id="topic-loader-container" class="loader-container">
+            <p>Searching the web...</p>
+            <div id="topic-progress-bar-container" class="progress-bar-container">
+                <div id="topic-progress-bar" class="progress-bar"></div>
+            </div>
+            <div id="topic-progress-text" class="progress-text">0%</div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fa-solid fa-list-check"></i> Recommended Topics</h2>
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid var(--border-color); border-radius: 8px;">
+                <h4>Keyword Difficulty Meaning:</h4>
+                <p style="margin-bottom: 8px;">
+                    <span class="priority-color" style="background-color: var(--green-bg);"></span> (Green) <strong>Low Competition</strong> - Easier to rank for. Excellent starting point for new sites. 
+                </p>
+                <p style="margin-bottom: 8px;">
+                    <span class="priority-color" style="background-color: var(--orange-bg);"></span> (Orange) <strong>Medium Competition</strong> - Achievable to rank for with a quality article and good on-page SEO. 
+                </p>
+                <p style="margin-bottom: 0;">
+                    <span class="priority-color" style="background-color: var(--red-bg);"></span> (Red) <strong>High Competition</strong> - More challenging. Requires a very comprehensive article and likely some backlinks to rank. 
+                </p>
+            </div>
+           
+            <div style="font-style: italic; color: var(--secondary-color); margin-bottom: 15px; font-size: 0.9em;">
+                <strong>Note on Search Volume:</strong> The results are directional estimates and not 100% accurate, but they provide a solid representation for content planning and identifying blog topic options. 
+            </div>
+
+            <table id="topics-table">
+                <thead>
+                    <tr>
+                        <th>Topic Idea</th>
+                        <th>Estimated Search Volume</th>
+                        <th>Keyword Difficulty</th>
+                        <th>Recommended Keywords</th>
+                        <th>Opportunity</th>
+                    </tr>
+                </thead>
+                <tbody id="topic-recommendation-list">
+                </tbody>
+            </table>
+        </div>
+    </div>
+   
+    <div id="schema" class="tab-content">
+        <div class="section">
+             <h2><i class="fa-solid fa-code"></i> Real Estate Schema Generator</h2>
+             <p>Select a schema type, fill in the details, and copy the generated JSON-LD code. This code is ready to be pasted into a <strong>Custom HTML</strong> tag in Google Tag Manager to deploy on your site. 🚀</p>
+        </div>
+        <div class="section schema-container">
+            <div class="schema-form-container">
+                <div class="form-group">
+                    <label for="schema-type-select">Select Schema Type:</label>
+                    <select id="schema-type-select">
+                        <option value="realEstateAgent">RealEstateAgent (Person)</option>
+						<option value="localBusiness">LocalBusiness (Real Estate Agency)</option>
+                        <option value="realEstateListing">RealEstateListing</option>
+                        <option value="faqPage">FAQPage</option>
+                        <option value="breadcrumbList">BreadcrumbList</option>
+                    </select>
+                </div>
+
+                <div id="form-realEstateAgent" class="schema-form-group active">
+                    <div class="form-group"><label for="rea-name">Agent Name:</label><input type="text" id="rea-name" placeholder="e.g., Jane Doe"></div>
+                    <div class="form-group"><label for="rea-id">Agent ID URL:</label><input type="url" id="rea-id" placeholder="https://www.example.com/agents/jane-doe#person"></div>
+                    <div class="form-group"><label for="rea-job-title">Job Title:</label><input type="text" id="rea-job-title" value="Real Estate Agent"></div>
+                    <div class="form-group"><label for="rea-url">Agent Profile URL:</label><input type="url" id="rea-url" placeholder="https://www.example.com/agents/jane-doe"></div>
+                    <div class="form-group"><label for="rea-image">Agent Image URL:</label><input type="url" id="rea-image" placeholder="https://www.example.com/images/jane-doe.jpg"></div>
+                    <div class="form-group"><label for="rea-description">Description:</label><textarea id="rea-description" rows="4" placeholder="Brief description of the agent..."></textarea></div>
+                    <div class="form-group"><label for="rea-phone">Phone Number:</label><input type="tel" id="rea-phone" placeholder="+1-555-123-4567"></div>
+                    <div class="form-group"><label for="rea-email">Email:</label><input type="email" id="rea-email" placeholder="jane@example.com"></div>
+
+                    <h4 style="margin-top:20px; margin-bottom:10px;">Agency Information (worksFor)</h4>
+                    <div class="form-group"><label for="rea-agency-name">Agency Name:</label><input type="text" id="rea-agency-name" placeholder="e.g., Example Realty"></div>
+                    <div class="form-group"><label for="rea-agency-url">Agency Website URL:</label><input type="url" id="rea-agency-url" placeholder="https://www.example.com"></div>
+                    <div class="form-group"><label for="rea-agency-phone">Agency Telephone:</label><input type="tel" id="rea-agency-phone" placeholder="+1-555-987-6543"></div>
+                    <div class="form-group"><label for="rea-agency-image">Agency Image/Logo URL:</label><input type="url" id="rea-agency-image" placeholder="https://www.example.com/logo.png"></div>
+                    <div class="form-group"><label for="rea-agency-pricerange">Agency Price Range:</label><input type="text" id="rea-agency-pricerange" placeholder="e.g., $$, $$$"></div>
+                    <div class="form-group"><label for="rea-street">Street Address:</label><input type="text" id="rea-street" placeholder="123 Main St"></div>
+                    <div class="form-group"><label for="rea-city">City:</label><input type="text" id="rea-city" placeholder="Sarasota"></div>
+                    <div class="form-group"><label for="rea-state">State/Region:</label><input type="text" id="rea-state" placeholder="FL"></div>
+                    <div class="form-group"><label for="rea-postal">Postal Code:</label><input type="text" id="rea-postal" placeholder="34236"></div>
+                    <div class="form-group"><label for="rea-country">Country:</label><input type="text" id="rea-country" placeholder="US"></div>
+                   
+                    <div class="form-group">
+                        <h4>Social Profiles (Optional)</h4>
+                        <div id="rea-social-profiles-container">
+                        </div>
+                        <button type="button" class="btn" id="add-rea-social-btn" style="margin-top: 10px; font-size: 14px; padding: 8px 12px;">+ Add Social Profile</button>
+                    </div>
+                    <div class="form-group"><label for="rea-main-entity">Main Entity of Page URL:</label><input type="url" id="rea-main-entity" placeholder="URL of the page this schema is on"></div>
+                </div>
+                <div id="form-realEstateListing" class="schema-form-group">
+                    <div class="form-group"><label for="rel-name">Listing Name (Title):</label><input type="text" id="rel-name" placeholder="e.g., Beautiful Waterfront Home"></div>
+                    <div class="form-group"><label for="rel-url">Listing URL:</label><input type="url" id="rel-url" placeholder="https://www.realtysite.com/listing/123-main-st"></div>
+                    <div class="form-group"><label for="rel-image">Primary Image URL:</label><input type="url" id="rel-image" placeholder="https://www.realtysite.com/images/123-main-st-1.jpg"></div>
+                    <div class="form-group"><label for="rel-street">Street Address:</label><input type="text" id="rel-street" placeholder="123 Main St"></div>
+                    <div class="form-group"><label for="rel-city">City:</label><input type="text" id="rel-city" placeholder="Sarasota"></div>
+                    <div class="form-group"><label for="rel-state">State/Region:</label><input type="text" id="rel-state" placeholder="FL"></div>
+                    <div class="form-group"><label for="rel-postal">Postal Code:</label><input type="text" id="rel-postal" placeholder="34236"></div>
+                    <div class="form-group"><label for="rel-country">Country:</label><input type="text" id="rel-country" placeholder="USA"></div>
+                    <div class="form-group"><label for="rel-desc">Description:</label><textarea id="rel-desc" rows="4" placeholder="Describe the property..."></textarea></div>
+                    <div class="form-group"><label for="rel-price">Price:</label><input type="number" id="rel-price" placeholder="500000"></div>
+                    <div class="form-group"><label for="rel-currency">Currency Code:</label><input type="text" id="rel-currency" value="USD" placeholder="e.g., USD, CAD"></div>
+                </div>
+
+                <div id="form-localBusiness" class="schema-form-group">
+                    <div class="form-group"><label for="lb-name">Agency Name:</label><input type="text" id="lb-name" placeholder="e.g., Sarasota Premier Realty"></div>
+                    <div class="form-group"><label for="lb-type">Business Type:</label><input type="text" id="lb-type" value="RealEstateAgent" disabled></div>
+                    <div class="form-group"><label for="lb-url">Website URL:</label><input type="url" id="lb-url" placeholder="https://www.sarasotarealty.com"></div>
+                    <div class="form-group"><label for="lb-image">Logo URL:</label><input type="url" id="lb-image" placeholder="https://www.sarasotarealty.com/logo.png"></div>
+                    <div class="form-group"><label for="lb-phone">Phone Number:</label><input type="tel" id="lb-phone" placeholder="+1-555-987-6543"></div>
+                    <div class="form-group"><label for="lb-street">Street Address:</label><input type="text" id="lb-street" placeholder="456 Commerce Dr"></div>
+                    <div class="form-group"><label for="lb-city">City:</label><input type="text" id="lb-city" placeholder="Sarasota"></div>
+                    <div class="form-group"><label for="lb-state">State/Region:</label><input type="text" id="lb-state" placeholder="FL"></div>
+                    <div class="form-group"><label for="lb-postal">Postal Code:</label><input type="text" id="lb-postal" placeholder="34236"></div>
+                    <div class="form-group"><label for="lb-country">Country:</label><input type="text" id="lb-country" placeholder="USA"></div>
+                    <div class="form-group"><label for="lb-price-range">Price Range:</label><input type="text" id="lb-price-range" placeholder="e.g., $$, $$$"></div>
+                    <div class="form-group">
+                        <h4>Social Profiles (Optional)</h4>
+                        <div id="lb-social-profiles-container">
+                            </div>
+                        <button type="button" class="btn" id="add-lb-social-btn" style="margin-top: 10px; font-size: 14px; padding: 8px 12px;">+ Add Social Profile</button>
+                    </div>
+                    <div class="opening-hours-container">
+                        <h4>Opening Hours</h4>
+                        <div class="form-group" style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                            <input type="checkbox" id="lb-open-247" style="width: auto;">
+                            <label for="lb-open-247" style="font-weight: bold; margin-bottom: 0; cursor: pointer;">Open 24/7</label>
+                        </div>
+                        <div id="opening-hours-spec">
+                            </div>
+                    </div>
+                </div>
+
+                <div id="form-faqPage" class="schema-form-group">
+                    <h4>FAQ Items</h4>
+                    <div id="faq-items-container">
+                        </div>
+                    <button type="button" class="btn" id="add-faq-btn" style="margin-top: 10px; font-size: 14px; padding: 8px 12px;">+ Add Q&A</button>
+                </div>
+
+                <div id="form-breadcrumbList" class="schema-form-group">
+                    <h4>Breadcrumb Items</h4>
+                    <div id="breadcrumb-items-container">
+                        </div>
+                    <button type="button" class="btn" id="add-breadcrumb-btn" style="margin-top: 10px; font-size: 14px; padding: 8px 12px;">+ Add Item</button>
+                </div>
+
+            </div>
+            <div class="schema-code-container">
+                <h3>Generated JSON-LD Code</h3>
+                <div class="schema-code-output">
+                    <button id="copy-schema-btn" class="btn copy-btn">Copy <i class="fa-solid fa-copy"></i></button>
+                    <code id="schema-code-block"></code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>"The real opposite of success isn’t failure, but the act of giving up."</p>
+    <p>© 2025 Sweet Potato SEO Tool by: Patrick B. Version: 2.9.0 (Improved AI API Integration)</p>
+    <style>
+      .move-right {
+        text-align: right;
+      }
+    </style>
+
+
+<script>
+    /**
+     * A generic function to call the Gemini API.
+     * @param {string} prompt The text prompt to send to the model.
+     * @returns {Promise<string>} The model's generated text response.
+     */
+    async function callGeminiAPI(prompt) {
+        // IMPORTANT: Replace with your actual Gemini API Key.
+        // For production, use a backend to keep your key secure.
+        const API_KEY = 'AIzaSyDJRoGJ3YaW2jAY8R8le7-_SvlzAz2_FxQ'; 
+
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        response_mime_type: "application/json",
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json();
+                console.error("API Error Body:", errorBody);
+                throw new Error(`API call failed with status: ${response.status}. ${errorBody.error?.message}`);
+            }
+
+            const data = await response.json();
+            const jsonText = data.candidates[0].content.parts[0].text;
+            return jsonText;
+
+        } catch (error) {
+            console.error("Error calling Gemini API:", error);
+            return `Error: Could not get a response from the AI. ${error.message}`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pagesInput = document.getElementById('gsc-data-pages');
+        const queriesInput = document.getElementById('gsc-data-queries');
+        const analyzeBtn = document.getElementById('analyze-btn');
+
+        function checkInputs() {
+            const pagesData = pagesInput.value.trim();
+            const queriesData = queriesInput.value.trim();
+            analyzeBtn.disabled = !(pagesData && queriesData);
+        }
+
+        pagesInput.addEventListener('input', checkInputs);
+        queriesInput.addEventListener('input', checkInputs);
+
+        initializeSchemaGenerator();
+    });
+
+    function openTab(tabName) {
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+
+        document.getElementById(tabName).classList.add('active');
+        const activeButton = document.querySelector(`.tab-btn[onclick="openTab('${tabName}')"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
+        }
+    }
+
+    let seoChartInstance = null;
+
+    function getScoreColor(score) {
+        const root = document.documentElement;
+        if (score > 70) return getComputedStyle(root).getPropertyValue('--score-green').trim();
+        if (score > 40) return getComputedStyle(root).getPropertyValue('--score-orange').trim();
+        return getComputedStyle(root).getPropertyValue('--score-red').trim();
+    }
+
+    // --- NEW: REALISTIC PROGRESS BAR ANIMATION ---
+    function animateProgressBar(duration, progressBarEl, progressTextEl) {
+        let progress = 0;
+        const intervalTime = 50; // Update every 50ms
+        const increment = (100 / (duration / intervalTime)) * 0.9; // Reach 90% over the estimated duration
+
+        const intervalId = setInterval(() => {
+            progress += increment;
+            if (progress < 95) {
+                progressBarEl.style.width = progress + '%';
+                progressTextEl.innerText = Math.round(progress) + '%';
+            } else {
+                // Stop it from going past ~95% on its own
+                clearInterval(intervalId);
+            }
+        }, intervalTime);
+
+        return intervalId;
+    }
+
+
+    function startCombinedAnalysis() {
+        // Hide previous results
+        document.getElementById('recommended-pages-section').style.display = 'none';
+        document.getElementById('keyword-opportunities-section').style.display = 'none';
+        document.getElementById('summary-section').style.display = 'none';
+        document.getElementById('summary-content-grid').style.display = 'none';
+        document.getElementById('summary-placeholder').style.display = 'block';
+
+        // Process data and generate summary (which includes the loader)
+        runAllAnalyses();
+    }
+   
+    function runAllAnalyses() {
+        const pagesRawData = parseGscData('pages');
+        const queriesRawData = parseGscData('queries');
+       
+        if(pagesRawData.length === 0 || queriesRawData.length === 0) {
+            alert("Please make sure both GSC Page and Query data are pasted correctly.");
+            return;
+        }
+
+        const getPageRecommendation = (pageData) => {
+            const { clicks, impressions, position, opportunityScore } = pageData;
+            const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+            if (impressions > 1500 && ctr < 1.5 && opportunityScore > 50) {
+                return `<p><strong><i class="fa-solid fa-mouse-pointer" style="color: #007bff;"></i> Focus: Improve Click-Through Rate (CTR)</strong></p><p>This page has high visibility (${impressions.toLocaleString()} impressions) but a low CTR of <strong>${ctr.toFixed(2)}%</strong>.</p><ul><li><strong>Rewrite Title Tag:</strong> Add numbers, brackets, or a question to grab attention.</li><li><strong>Optimize Meta Description:</strong> Treat it like ad copy. Include a strong call-to-action.</li><li><strong>Add Schema Markup:</strong> Use FAQ or How-to schema to get rich snippets.</li></ul>`;
+            } else if (position > 10 && position <= 20 && opportunityScore > 40) {
+                return `<p><strong><i class="fa-solid fa-person-running" style="color: #fd7e14;"></i> Focus: "Striking Distance" Boost</strong></p><p>You're on the verge of page one at position <strong>${position.toFixed(1)}</strong>.</p><ul><li><strong>Content Deepening:</strong> Add a new section covering a related sub-topic or an FAQ.</li><li><strong>Strategic Internal Linking:</strong> Add 3-5 new internal links to this page.</li><li><strong>On-Page SEO Tune-up:</strong> Review your H1/H2 tags and image alt text.</li></ul>`;
+            } else if (opportunityScore > 70) {
+                return `<p><strong><i class="fa-solid fa-rocket" style="color: #28a745;"></i> Focus: High-Impact Content Refresh</strong></p><p>This is a prime candidate for a full content refresh.</p><ul><li><strong>Update & Expand:</strong> Check for outdated info and add at least 300 words.</li><li><strong>Add Multimedia:</strong> Embed a relevant video or add new, unique images.</li><li><strong>Check User Intent:</strong> Re-evaluate the top 5 search results for your main keyword.</li></ul>`;
+            } else if (opportunityScore > 40) {
+                return `<p><strong><i class="fa-solid fa-wrench" style="color: #6c757d;"></i> Focus: Content & Authority Building</strong></p><p>This page has solid potential.</p><ul><li><strong>Improve E-E-A-T:</strong> Add author bios and cite reputable sources.</li><li><strong>Keyword Expansion:</strong> Research and add 2-3 related long-tail keywords.</li><li><strong>Review Page Experience:</strong> Check for any Core Web Vitals issues.</li></ul>`;
+            } else {
+                return `<p><strong><i class="fa-solid fa-seedling" style="color: #17a2b8;"></i> Focus: Foundational SEO Check</strong></p><p>A lower priority, but foundational SEO can provide incremental gains.</p><ul><li><strong>Readability:</strong> Use short sentences, paragraphs, and bullet points.</li><li><strong>Intent Alignment:</strong> Double-check that content matches keyword intent.</li></ul>`;
+            }
+        };
+
+        const getKeywordRecommendation = (keywordData) => {
+            const { item, impressions, position } = keywordData;
+            let intent = 'Informational';
+            if (['buy', 'price', 'review', 'best', 'vs'].some(w => item.toLowerCase().includes(w))) intent = 'Commercial/Transactional';
+
+            if (position > 10 && position <= 20) {
+                return `<p><strong><i class="fa-solid fa-person-running" style="color: #fd7e14;"></i> Focus: On-Page Keyword Integration</strong></p><p>This "striking distance" keyword needs to be more explicitly optimized on its ranking page.</p><ul><li><strong>Check H1/H2 Tags:</strong> Ensure this keyword is in a heading.</li><li><strong>Body Content:</strong> Integrate the keyword in the first 100 words.</li><li><strong>Internal Link Anchor Text:</strong> Build new internal links using this keyword as anchor text.</li></ul>`;
+            } else if (position > 20 && impressions > 500) {
+                return `<p><strong><i class="fa-solid fa-magnifying-glass-plus" style="color: #007bff;"></i> Focus: Address Content Gap</strong></p><p>Your page is only tangentially related. It doesn't fully satisfy the <strong>${intent}</strong> search intent.</p><ul><li><strong>Create a New Section:</strong> Add a dedicated H2 section that specifically answers this query.</li><li><strong>Consider a New Page:</strong> If intent is very different, create a new, dedicated article.</li></ul>`;
+            } else {
+                return `<p><strong><i class="fa-solid fa-wrench" style="color: #6c757d;"></i> Focus: Foundational Relevance</strong></p><p>A smaller opportunity. Ensure it's mentioned on the ranking page to build topical authority.</p><ul><li><strong>Semantic Inclusion:</strong> Naturally incorporate this keyword or synonyms into existing text.</li></ul>`;
+            }
+        };
+       
+        const pagesRecommendations = processGscItems(pagesRawData, getPageRecommendation);
+        const queriesRecommendations = processGscItems(queriesRawData, getKeywordRecommendation);
+       
+        correlateAndRender(pagesRecommendations, queriesRecommendations);
+
+        generateSEOAnalysisSummary();
+    }
+   
+    function parseGscData(type) {
+        const config = {
+            pages: { inputId: 'gsc-data-pages', headerName: 'Top pages' },
+            queries: { inputId: 'gsc-data-queries', headerName: 'Top queries' }
+        };
+        const currentConfig = config[type];
+        const dataInput = document.getElementById(currentConfig.inputId).value;
+
+        if (!dataInput) return [];
+
+        const lines = dataInput.trim().split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) return [];
+       
+        const delimiter = lines[0].includes(',') ? ',' : '\t';
+        const headers = lines[0].split(delimiter).map(header => header.trim());
+        const requiredHeaders = [currentConfig.headerName, 'Clicks', 'Impressions', 'Position'];
+        if (requiredHeaders.some(h => !headers.includes(h))) return [];
+
+        return lines.slice(1).map(row => {
+            const values = row.split(delimiter).map(val => val.trim());
+            const item = values[headers.indexOf(currentConfig.headerName)];
+            const clicks = parseInt(values[headers.indexOf('Clicks')]);
+            const impressions = parseInt(values[headers.indexOf('Impressions')]);
+            const position = parseFloat(values[headers.indexOf('Position')]);
+            if (item && !isNaN(clicks) && !isNaN(impressions) && !isNaN(position)) {
+                return { item, clicks, impressions, position };
+            }
+            return null;
+        }).filter(Boolean);
+    }
+
+    function correlateAndRender(pages, keywords) {
+        const knownLocations = ['new york', 'los angeles', 'chicago', 'houston', 'phoenix', 'philadelphia', 'san antonio', 'san diego', 'dallas', 'san jose', 'austin', 'jacksonville', 'fort worth', 'columbus', 'charlotte', 'san francisco', 'indianapolis', 'seattle', 'denver', 'washington', 'boston', 'el paso', 'nashville', 'detroit', 'oklahoma city', 'portland', 'las vegas', 'memphis', 'louisville', 'baltimore', 'milwaukee', 'albuquerque', 'tucson', 'fresno', 'sacramento', 'kansas city', 'long beach', 'mesa', 'atlanta', 'colorado springs', 'virginia beach', 'raleigh', 'omaha', 'miami', 'oakland', 'minneapolis', 'tulsa', 'wichita', 'new orleans', 'arlington', 'california', 'texas', 'florida', 'illinois', 'pennsylvania', 'ohio', 'georgia', 'north carolina', 'michigan', 'sarasota'];
+
+        const cleanTextForMatching = (text) => {
+            return text.toLowerCase()
+                .replace(/https?:\/\/[^\/]+/, '')
+                .replace(/[\/\-_]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        };
+
+        const extractLocation = (text) => {
+            const cleanedText = ` ${text.toLowerCase()} `;
+            const inMatch = cleanedText.match(/\s+in\s+([a-z\s]+?)(?:\s+|$)/);
+            if (inMatch && inMatch[1]) {
+                const potentialLocation = inMatch[1].trim();
+                if (knownLocations.some(loc => potentialLocation.includes(loc))) {
+                    return potentialLocation;
+                }
+            }
+            for (const loc of knownLocations) {
+                if (cleanedText.includes(` ${loc} `)) {
+                    return loc;
+                }
+            }
+            return null;
+        };
+
+        const getRelevanceScore = (page, keyword) => {
+            let score = 0;
+            const pageText = page.cleanedText;
+            const keywordText = keyword.cleanedText;
+
+            if (page.location && keyword.location) {
+                if (page.location === keyword.location) {
+                    score += 500;
+                } else {
+                    score -= 500;
+                }
+            } else if (page.location && !keyword.location) {
+                 if (pageText.includes(keywordText)) score += 50;
+            } else if (!page.location && keyword.location) {
+                score -= 100;
+            }
+
+            if (pageText.includes(keywordText)) {
+                score += 150;
+            }
+            const pageSlug = pageText.split(' ').pop();
+            if (keywordText.includes(pageSlug)) {
+                score += 100;
+            }
+
+            const pageWords = pageText.split(' ');
+            const keywordWords = keywordText.split(' ');
+            const overlapCount = keywordWords.filter(word => pageWords.includes(word)).length;
+            if (overlapCount > 0) {
+                score += overlapCount * 20;
+            }
+           
+            if (pageText.indexOf(keywordWords.join(' ')) !== -1) {
+                score += 50;
+            }
+
+            return score;
+        };
+
+        const processedPages = pages.map(p => ({
+            ...p,
+            cleanedText: cleanTextForMatching(p.item),
+            location: extractLocation(p.item),
+        }));
+        const processedKeywords = keywords.map(k => ({
+            ...k,
+            cleanedText: cleanTextForMatching(k.item),
+            location: extractLocation(k.item),
+        }));
+
+        processedPages.forEach(page => {
+            const relevantKeywords = processedKeywords
+                .map(kw => ({
+                    ...kw,
+                    relevanceScore: getRelevanceScore(page, kw)
+                }))
+                .filter(kw => kw.relevanceScore > 50)
+                .sort((a, b) => b.relevanceScore - a.relevanceScore)
+                .slice(0, 3);
+
+            if (relevantKeywords.length > 0) {
+                const keywordHTML = '<ul>' + relevantKeywords.map(k => `<li>${k.item} (Score: ${k.opportunityScore}%)</li>`).join('') + '</ul>';
+                page.recommendationText += `<div style="margin-top:15px;"><strong><i class="fa-solid fa-link" style="color: #6f42c1;"></i> Related Keyword Opportunities:</strong>${keywordHTML}</div>`;
+            }
+        });
+       
+        processedKeywords.forEach(keyword => {
+            const bestMatch = processedPages
+                .map(page => ({
+                    ...page,
+                    relevanceScore: getRelevanceScore(page, keyword)
+                }))
+                .filter(page => page.relevanceScore > 50)
+                .sort((a, b) => b.relevanceScore - a.relevanceScore)[0];
+
+            if (bestMatch) {
+                keyword.recommendationText += `<div style="margin-top:15px;"><strong><i class="fa-solid fa-file-lines" style="color: #6f42c1;"></i> Suggested Target Page:</strong><p style="margin:5px 0 0 0;">${bestMatch.item}</p></div>`;
+            }
+        });
+       
+        const pageList = document.getElementById('recommendation-list');
+        pageList.innerHTML = '';
+        if (processedPages.length === 0) {
+            pageList.innerHTML = `<tr><td colspan="6">No pages were found that meet the optimization criteria (position > 10).</td></tr>`;
+        } else {
+            processedPages.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = item.priority;
+                row.innerHTML = `<td data-value="${item.item}">${item.item}</td><td data-value="${item.clicks}">${item.clicks}</td><td data-value="${item.impressions}">${item.impressions}</td><td data-value="${item.position}">${item.position.toFixed(2)}</td><td data-value="${item.opportunityScore}"><div class="score-bar-container"><div class="score-bar" style="width: ${item.opportunityScore}%; background-color: ${getScoreColor(item.opportunityScore)};">${item.opportunityScore}%</div></div></td><td>${item.recommendationText}</td>`;
+                pageList.appendChild(row);
+            });
+            addSortEventListeners('recommended-pages-table');
+        }
+
+        const keywordList = document.getElementById('keyword-recommendation-list');
+        keywordList.innerHTML = '';
+        if (processedKeywords.length === 0) {
+            keywordList.innerHTML = `<tr><td colspan="6">No keywords were found that meet the optimization criteria (position > 10).</td></tr>`;
+        } else {
+            processedKeywords.forEach(item => {
+                const row = document.createElement('tr');
+                row.className = item.priority;
+                row.innerHTML = `<td data-value="${item.item}">${item.item}</td><td data-value="${item.clicks}">${item.clicks}</td><td data-value="${item.impressions}">${item.impressions}</td><td data-value="${item.position}">${item.position.toFixed(2)}</td><td data-value="${item.opportunityScore}"><div class="score-bar-container"><div class="score-bar" style="width: ${item.opportunityScore}%; background-color: ${getScoreColor(item.opportunityScore)};">${item.opportunityScore}%</div></div></td><td>${item.recommendationText}</td>`;
+                keywordList.appendChild(row);
+            });
+            addSortEventListeners('keyword-opportunities-table');
+        }
+    }
+
+
+    function hideLoaderAndShowTables() {
+        document.getElementById('loader-container').style.display = 'none';
+        document.getElementById('recommended-pages-section').style.display = 'block';
+        document.getElementById('keyword-opportunities-section').style.display = 'block';
+        document.getElementById('summary-section').style.display = 'block';
+        document.getElementById('recommended-pages-content').style.display = 'none';
+        document.getElementById('keyword-opportunities-content').style.display = 'none';
+        document.querySelector('#recommended-pages-section .toggle-icon').textContent = '+';
+        document.querySelector('#keyword-opportunities-section .toggle-icon').textContent = '+';
+    }
+
+    function toggleSection(sectionId, iconElement) {
+        const section = document.getElementById(sectionId);
+        if (section.style.display === 'none' || section.style.display === '') {
+            section.style.display = 'block';
+            iconElement.textContent = '−';
+        } else {
+            section.style.display = 'none';
+            iconElement.textContent = '+';
+        }
+    }
+
+    function processGscItems(items, recommendationFn) {
+        const positionThreshold = 10;
+        let itemsWithScores = items
+            .filter(p => p.position > positionThreshold)
+            .map(p => {
+                const rawScore = Math.log10(p.impressions + 1) * (50 / p.position);
+                return { ...p, rawScore };
+            });
+
+        if (itemsWithScores.length === 0) return [];
+        const maxRawScore = Math.max(...itemsWithScores.map(p => p.rawScore));
+        let recommendations = itemsWithScores.map(p => {
+            const opportunityScore = maxRawScore > 0 ? Math.min(100, Math.round((p.rawScore / maxRawScore) * 100)) : 0;
+            let priority;
+            if (opportunityScore > 70) priority = 'green-priority';
+            else if (opportunityScore > 40) priority = 'orange-priority';
+            else priority = 'red-priority';
+            return { ...p, opportunityScore, priority, recommendationText: recommendationFn({ ...p, opportunityScore }) };
+        });
+        return recommendations.sort((a, b) => b.opportunityScore - a.opportunityScore);
+    }
+
+    function createSeoChart(keywordData) {
+        const ctx = document.getElementById('seoChart').getContext('2d');
+        if (seoChartInstance) {
+            seoChartInstance.destroy();
+        }
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        const labelColor = isDarkMode ? '#f5f5f5' : '#333';
+        const chartColors = isDarkMode 
+            ? ['#8bb7f0', '#30c85a', '#ff983d', '#f15261', '#9d66cc']
+            : ['#007bff', '#28a745', '#fd7e14', '#dc3545', '#6f42c1'];
+        seoChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: keywordData.labels,
+                datasets: [{
+                    label: 'Impressions',
+                    data: keywordData.impressions,
+                    backgroundColor: chartColors,
+                    borderColor: isDarkMode ? '#1e1e1e' : '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Top 5 Keywords by Impression Share', color: labelColor, font: { size: 18 } },
+                    legend: { position: 'top', labels: { color: labelColor } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw || 0;
+                                let total = context.chart.getDatasetMeta(0).total;
+                                let percentage = ((value / total) * 100).toFixed(1) + '%';
+                                return `${label}: ${value.toLocaleString()} Impressions (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+   
+    // =========================================================================
+    // === 🚀 START: IMPROVED SEO ANALYSIS SUMMARY FUNCTION 🚀 ===
+    // =========================================================================
+    async function generateSEOAnalysisSummary() {
+        // --- Show Loader & Start Animation ---
+        const loaderContainer = document.getElementById('loader-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        progressBar.style.width = '0%';
+        progressText.innerText = '0%';
+        loaderContainer.style.display = 'block';
+        const animationInterval = animateProgressBar(5000, progressBar, progressText);
+
+        // --- Process Data for KPIs, Chart, and AI Context ---
+        document.getElementById('summary-placeholder').style.display = 'none';
+        document.getElementById('summary-content-grid').style.display = 'grid';
+        const summaryTextContainer = document.getElementById('seo-analysis-summary-text');
+        summaryTextContainer.innerHTML = '<h3><i class="fa-solid fa-user-tie"></i> Generating Expert AI Analysis...</h3><p>Please wait, the AI is reviewing your data.</p>';
+        
+        const processRawData = (rawData, headerName) => {
+            if (rawData.length < 2) return [];
+            const delimiter = rawData[0].includes(',') ? ',' : '\t';
+            const headers = rawData[0].split(delimiter).map(h => h.trim());
+            const itemIndex = headers.indexOf(headerName);
+            const clicksIndex = headers.indexOf('Clicks');
+            const impressionsIndex = headers.indexOf('Impressions');
+            if (itemIndex === -1 || clicksIndex === -1 || impressionsIndex === -1) return [];
+            return rawData.slice(1).map(row => {
+                const values = row.split(delimiter);
+                return { name: values[itemIndex]?.trim(), clicks: parseInt(values[clicksIndex]) || 0, impressions: parseInt(values[impressionsIndex]) || 0 };
+            }).filter(item => item.name);
+        };
+        
+        const allPages = processRawData(document.getElementById('gsc-data-pages').value.trim().split('\n'), 'Top pages');
+        const allKeywords = processRawData(document.getElementById('gsc-data-queries').value.trim().split('\n'), 'Top queries');
+
+        // Update KPIs and Chart immediately
+        const totalClicks = allPages.reduce((sum, item) => sum + item.clicks, 0);
+        const totalImpressions = allPages.reduce((sum, item) => sum + item.impressions, 0);
+        const averageCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+        document.getElementById('kpi-clicks').innerText = totalClicks.toLocaleString();
+        document.getElementById('kpi-impressions').innerText = totalImpressions.toLocaleString();
+        document.getElementById('kpi-ctr').innerText = `${averageCtr.toFixed(2)}%`;
+        const top5KeywordsByImp = [...allKeywords].sort((a, b) => b.impressions - a.impressions).slice(0, 5);
+        createSeoChart({ labels: top5KeywordsByImp.map(k => k.name), impressions: top5KeywordsByImp.map(k => k.impressions) });
+       
+        // --- Prepare Enhanced Data Context for AI ---
+        const topOpportunityPageRow = document.getElementById('recommendation-list').rows[0];
+        const hasOpportunityPage = topOpportunityPageRow && topOpportunityPageRow.cells.length > 1;
+        const topOpportunityKeywordRow = document.getElementById('keyword-recommendation-list').rows[0];
+        const hasOpportunityKeyword = topOpportunityKeywordRow && topOpportunityKeywordRow.cells.length > 1;
+
+        let dataContext = `- Total Clicks: ${totalClicks.toLocaleString()}\n- Total Impressions: ${totalImpressions.toLocaleString()}\n- Average CTR: ${averageCtr.toFixed(2)}%`;
+        if (hasOpportunityPage) {
+            dataContext += `\n- Top Opportunity Page: "${topOpportunityPageRow.cells[0].innerText}"\n- This page's average position: ${topOpportunityPageRow.cells[3].innerText}\n- This page's impressions: ${topOpportunityPageRow.cells[2].innerText}`;
+        }
+        if (hasOpportunityKeyword) {
+            dataContext += `\n- Top Opportunity Keyword: "${topOpportunityKeywordRow.cells[0].innerText}"\n- This keyword's average position: ${topOpportunityKeywordRow.cells[3].innerText}\n- This keyword's impressions: ${topOpportunityKeywordRow.cells[2].innerText}`;
+        }
+        
+        // --- Define the Improved AI Prompt ---
+        const prompt = `
+            You are an expert SEO analyst reviewing Google Search Console data. Your tone should be professional, encouraging, and highly actionable.
+            Based on the following data summary, provide an analysis and action plan.
+            Data:
+            ${dataContext}
+
+            Your task is to generate a response in a specific format. You must return ONLY a valid JSON object with a single key: "html_content".
+            The value of "html_content" should be a string containing the HTML for the analysis.
+
+            The HTML string must follow these rules:
+            1.  Start with an <h3> tag containing the text "Expert AI Analysis". Include a Font Awesome icon: <i class="fa-solid fa-user-tie"></i>.
+            2.  Follow this with a single <p> paragraph that provides a concise, high-level overview of the website's performance based on the provided data.
+            3.  Next, create a primary action plan consisting of 2-3 specific, actionable recommendations.
+            4.  Each recommendation must be enclosed in its own <div class="recommendation-card">.
+            5.  Inside each card, begin with an <h4> that includes a relevant Font Awesome solid icon (e.g., <i class="fa-solid fa-rocket"></i>) and a short, impactful title (e.g., "Boost Your Top Opportunity Page").
+            6.  After the <h4>, write a detailed <p> explaining the "why" and "how" of the recommendation. Use <strong> tags to highlight specific page names, keywords, or metrics from the data context to make the advice feel personalized and data-driven.
+            7.  Do NOT include any markdown (like **, #, or \`\`\`), <ol>, or <ul> tags in your HTML output. Do not wrap the HTML in a code block.
+        `;
+        
+        // --- Await API response and finalize UI ---
+        const apiResponseText = await callGeminiAPI(prompt);
+       
+        clearInterval(animationInterval);
+        progressBar.style.width = '100%';
+        progressText.innerText = '100%';
+        
+        // --- NEW: Parse JSON and Handle Potential Errors ---
+        try {
+            const cleanedText = apiResponseText.replace(/```json|```/g, '').trim();
+            const parsedResponse = JSON.parse(cleanedText);
+
+            if (parsedResponse && parsedResponse.html_content) {
+                summaryTextContainer.innerHTML = parsedResponse.html_content;
+            } else {
+                throw new Error("Invalid JSON structure received from AI.");
+            }
+        } catch (error) {
+            console.error("Error parsing AI response:", error);
+            console.error("Raw response from AI:", apiResponseText); // Log raw response for debugging
+            summaryTextContainer.innerHTML = `
+                <div class="recommendation-card" style="border-left-color: var(--score-red);">
+                    <h4><i class="fa-solid fa-triangle-exclamation"></i> Analysis Error</h4>
+                    <p>There was an issue generating the AI analysis. The AI returned data in an unexpected format. Please try running the analysis again.</p>
+                    <p><em>(Technical details have been logged to the console.)</em></p>
+                </div>
+            `;
+        }
+
+        // --- Show All Tables and Hide Loader ---
+        setTimeout(() => {
+            hideLoaderAndShowTables();
+        }, 300);
+    }
+    // =======================================================================
+    // === ✅ END: IMPROVED SEO ANALYSIS SUMMARY FUNCTION ✅ ===
+    // =======================================================================
+
+    async function startTopicGeneration() {
+        const loaderContainer = document.getElementById('topic-loader-container');
+        const progressBar = document.getElementById('topic-progress-bar');
+        const progressText = document.getElementById('topic-progress-text');
+        const topicsTable = document.getElementById('topics-table');
+        const topicList = document.getElementById('topic-recommendation-list');
+
+        progressBar.style.width = '0%';
+        progressText.innerText = '0%';
+        loaderContainer.style.display = 'block';
+        topicsTable.style.display = 'none';
+        topicList.innerHTML = '<tr><td colspan="5">Asking the AI for topic ideas... this may take a moment.</td></tr>';
+       
+        const animationInterval = animateProgressBar(6000, progressBar, progressText); // Animate over 6 seconds
+
+        // --- Prepare and send API call ---
+        const niche = document.getElementById('niche').value;
+        const location = document.getElementById('location').value.trim();
+        const locationText = location ? `specifically for the location "${location}"` : 'globally';
+        const prompt = `Act as an expert SEO and content strategist. Generate a list of 5 blog post topic ideas for the niche "${niche}", targeted ${locationText}. For each idea, provide: "idea", "volume", "competition" (Low, Medium, or High), "recommendedKeywords" (array of 3-4), and "opportunity" (1-2 sentences). Return your response ONLY as a valid JSON array of objects.`;
+
+        // --- Await API response and finalize UI ---
+        const aiResponse = await callGeminiAPI(prompt);
+
+        clearInterval(animationInterval);
+        progressBar.style.width = '100%';
+        progressText.innerText = '100%';
+       
+        topicList.innerHTML = '';
+        try {
+            const cleanedResponse = aiResponse.replace(/```json/g, '').replace(/```/g, '').trim();
+            const generatedTopics = JSON.parse(cleanedResponse);
+
+            if (generatedTopics.length === 0) {
+                topicList.innerHTML = '<tr><td colspan="5">The AI could not find topics for this niche. Try being more specific.</td></tr>';
+            } else {
+                generatedTopics.forEach(topic => {
+                    const recommendedKeywordsHtml = `<ul>${topic.recommendedKeywords.map(kw => `<li>${kw}</li>`).join('')}</ul>`;
+                    const row = document.createElement('tr');
+                    const competitionClass = topic.competition === 'Low' ? 'low-competition' : topic.competition === 'Medium' ? 'medium-competition' : 'high-competition';
+                    row.className = competitionClass;
+                    row.innerHTML = `<td>${topic.idea}</td><td>${topic.volume.toLocaleString()} monthly</td><td>${topic.competition}</td><td>${recommendedKeywordsHtml}</td><td>${topic.opportunity}</td>`;
+                    topicList.appendChild(row);
+                });
+            }
+        } catch (error) {
+            console.error("Error parsing AI response:", error);
+            topicList.innerHTML = `<tr><td colspan="5">Error: The AI returned an invalid response. Please try again. Details in console.</td></tr>`;
+        }
+       
+        setTimeout(() => {
+            loaderContainer.style.display = 'none';
+            topicsTable.style.display = 'table';
+        }, 300);
+    }
+
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        body.classList.add('dark-mode');
+        darkModeToggle.checked = true;
+    } else {
+        body.classList.remove('dark-mode');
+        darkModeToggle.checked = false;
+    }
+    darkModeToggle.addEventListener('change', () => {
+        body.classList.toggle('dark-mode');
+        const currentTheme = body.classList.contains('dark-mode') ? 'dark' : 'light';
+        localStorage.setItem('theme', currentTheme);
+
+        if (seoChartInstance) {
+            // Re-render chart with new colors
+            const allKeywords = parseGscData('queries');
+            const top5KeywordsByImp = [...allKeywords].sort((a, b) => b.impressions - a.impressions).slice(0, 5);
+            createSeoChart({ labels: top5KeywordsByImp.map(k => k.name), impressions: top5KeywordsByImp.map(k => k.impressions) });
+        }
+    });
+
+    function addSortEventListeners(tableId) {
+        document.querySelectorAll(`#${tableId} th[data-column]`).forEach(headerCell => {
+            headerCell.addEventListener('click', () => {
+                const tableElement = document.getElementById(tableId);
+                const header = headerCell;
+                const column = header.dataset.column;
+                const type = header.dataset.type;
+                const currentIsAsc = header.classList.contains('sort-asc');
+               
+                tableElement.querySelectorAll('th').forEach(th => {
+                    th.classList.remove('sort-asc', 'sort-desc');
+                    th.querySelector('.sort-icon')?.classList.remove('active');
+                });
+
+                header.classList.toggle('sort-asc', !currentIsAsc);
+                header.classList.toggle('sort-desc', currentIsAsc);
+                header.querySelector('.sort-icon').classList.add('active');
+               
+                sortTableByColumn(tableElement, column, type, !currentIsAsc);
+            });
+        });
+    }
+
+    function sortTableByColumn(table, column, type, asc = true) {
+        const dirModifier = asc ? 1 : -1;
+        const tBody = table.tBodies[0];
+        const rows = Array.from(tBody.querySelectorAll("tr"));
+
+        const colIndex = Array.from(table.querySelectorAll('thead th')).findIndex(th => th.dataset.column === column);
+        if (colIndex === -1) return;
+
+        const sortedRows = rows.sort((a, b) => {
+            const aColText = a.querySelector(`td:nth-child(${colIndex + 1})`).dataset.value;
+            const bColText = b.querySelector(`td:nth-child(${colIndex + 1})`).dataset.value;
+
+            switch (type) {
+                case 'number':
+                    return (parseFloat(aColText) - parseFloat(bColText)) * dirModifier;
+                case 'percent':
+                    return (parseFloat(aColText) - parseFloat(bColText)) * dirModifier;
+                case 'string':
+                default:
+                    return aColText.localeCompare(bColText) * dirModifier;
+            }
+        });
+
+        while (tBody.firstChild) {
+            tBody.removeChild(tBody.firstChild);
+        }
+
+        tBody.append(...sortedRows);
+    }
+
+    function initializeSchemaGenerator() {
+        const schemaTypeSelect = document.getElementById('schema-type-select');
+        const schemaFormsContainer = document.querySelector('.schema-form-container');
+        const copyBtn = document.getElementById('copy-schema-btn');
+        const addFaqBtn = document.getElementById('add-faq-btn');
+        const addBreadcrumbBtn = document.getElementById('add-breadcrumb-btn');
+        const faqContainer = document.getElementById('faq-items-container');
+        const breadcrumbContainer = document.getElementById('breadcrumb-items-container');
+        const openingHoursContainer = document.getElementById('opening-hours-spec');
+        const addReaSocialBtn = document.getElementById('add-rea-social-btn');
+        const addLbSocialBtn = document.getElementById('add-lb-social-btn');
+        const reaSocialContainer = document.getElementById('rea-social-profiles-container');
+        const lbSocialContainer = document.getElementById('lb-social-profiles-container');
+        const open247Checkbox = document.getElementById('lb-open-247');
+
+        const displayCorrectForm = () => {
+            const selectedType = schemaTypeSelect.value;
+            document.querySelectorAll('.schema-form-group').forEach(form => form.classList.remove('active'));
+            document.getElementById(`form-${selectedType}`).classList.add('active');
+            generateSchema();
+        };
+
+        let faqCount = 0;
+        const addFaqPair = () => {
+            faqCount++;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'dynamic-item';
+            itemDiv.innerHTML = `
+                <div class="form-group">
+                    <label for="faq-q-${faqCount}">Question ${faqCount}:</label>
+                    <input type="text" id="faq-q-${faqCount}" placeholder="Enter the question" class="faq-question">
+                </div>
+                <div class="form-group">
+                    <label for="faq-a-${faqCount}">Answer ${faqCount}:</label>
+                    <textarea id="faq-a-${faqCount}" placeholder="Enter the answer" class="faq-answer" rows="3"></textarea>
+                </div>
+                <button type="button" class="remove-btn">Remove Q&A</button>
+            `;
+            faqContainer.appendChild(itemDiv);
+            itemDiv.querySelector('.remove-btn').addEventListener('click', () => {
+                itemDiv.remove();
+                generateSchema();
+            });
+        };
+
+        let breadcrumbCount = 0;
+        const addBreadcrumbItem = () => {
+            breadcrumbCount++;
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'dynamic-item';
+            itemDiv.innerHTML = `
+                <strong>Item ${breadcrumbCount}</strong>
+                <div class="form-group" style="margin-top: 5px;">
+                    <label for="bc-name-${breadcrumbCount}">Name:</label>
+                    <input type="text" id="bc-name-${breadcrumbCount}" placeholder="e.g., Home" class="breadcrumb-name">
+                </div>
+                <div class="form-group">
+                     <label for="bc-url-${breadcrumbCount}">URL:</label>
+                    <input type="url" id="bc-url-${breadcrumbCount}" placeholder="https://example.com" class="breadcrumb-url">
+                </div>
+                <button type="button" class="remove-btn">Remove Item</button>
+            `;
+            breadcrumbContainer.appendChild(itemDiv);
+            itemDiv.querySelector('.remove-btn').addEventListener('click', () => {
+                itemDiv.remove();
+                generateSchema();
+            });
+        };
+       
+        const addSocialProfile = (container) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'dynamic-item social-item';
+            itemDiv.innerHTML = `
+                <input type="url" placeholder="Enter social profile URL" class="social-profile-input">
+                <button type="button" class="remove-btn">Remove</button>
+            `;
+            container.appendChild(itemDiv);
+            itemDiv.querySelector('.remove-btn').addEventListener('click', () => {
+                itemDiv.remove();
+                generateSchema();
+            });
+        };
+
+        addFaqBtn.addEventListener('click', addFaqPair);
+        addBreadcrumbBtn.addEventListener('click', addBreadcrumbItem);
+        addReaSocialBtn.addEventListener('click', () => addSocialProfile(reaSocialContainer));
+        addLbSocialBtn.addEventListener('click', () => addSocialProfile(lbSocialContainer));
+       
+        open247Checkbox.addEventListener('change', (e) => {
+            const is247 = e.target.checked;
+            const dayDivs = openingHoursContainer.querySelectorAll('.opening-hours-day');
+            dayDivs.forEach(dayDiv => {
+                const checkbox = dayDiv.querySelector('.hours-active-check');
+                const timeInputs = dayDiv.querySelectorAll('input[type="time"]');
+                checkbox.disabled = is247;
+                timeInputs.forEach(input => input.disabled = is247);
+                if (is247) {
+                    checkbox.checked = true;
+                    dayDiv.querySelector('.hours-inputs').style.display = 'flex';
+                    const dayName = checkbox.id.split('-')[2];
+                    document.getElementById(`hours-open-${dayName}`).value = "00:00";
+                    document.getElementById(`hours-close-${dayName}`).value = "23:59";
+                } else {
+                    checkbox.checked = false;
+                    dayDiv.querySelector('.hours-inputs').style.display = 'none';
+                }
+            });
+            generateSchema();
+        });
+
+        openingHoursContainer.innerHTML = '';
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        days.forEach(day => {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'opening-hours-day';
+            dayDiv.innerHTML = `
+                <label>
+                    <input type="checkbox" id="hours-active-${day}" class="hours-active-check"> ${day}
+                </label>
+                <div class="hours-inputs" style="display:none;">
+                    <input type="time" id="hours-open-${day}" value="09:00">
+                    <span>to</span>
+                    <input type="time" id="hours-close-${day}" value="17:00">
+                </div>`;
+            openingHoursContainer.appendChild(dayDiv);
+            dayDiv.querySelector(`#hours-active-${day}`).addEventListener('change', (e) => {
+                dayDiv.querySelector('.hours-inputs').style.display = e.target.checked ? 'flex' : 'none';
+                generateSchema();
+            });
+        });
+
+        const copySchema = () => {
+            const codeToCopy = document.getElementById('schema-code-block').textContent;
+            navigator.clipboard.writeText(codeToCopy).then(() => {
+                copyBtn.innerHTML = 'Copied! <i class="fa-solid fa-check"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = 'Copy <i class="fa-solid fa-copy"></i>';
+                }, 2000);
+            }).catch(err => console.error('Failed to copy text: ', err));
+        };
+
+        schemaTypeSelect.addEventListener('change', displayCorrectForm);
+        schemaFormsContainer.addEventListener('input', generateSchema);
+        copyBtn.addEventListener('click', copySchema);
+
+        addFaqPair();
+        addBreadcrumbItem();
+        addBreadcrumbItem();
+        addSocialProfile(reaSocialContainer);
+        addSocialProfile(lbSocialContainer);
+        generateSchema();
+    }
+   
+    function generateSchema() {
+        const selectedType = document.getElementById('schema-type-select').value;
+        let schema = {};
+
+        switch (selectedType) {
+            case 'realEstateAgent':
+                schema = {
+                    "@context": "https://schema.org", 
+                    "@type": "Person",
+                    "@id": document.getElementById('rea-id').value,
+                    "name": document.getElementById('rea-name').value,
+                    "jobTitle": document.getElementById('rea-job-title').value,
+                    "image": document.getElementById('rea-image').value,
+                    "url": document.getElementById('rea-url').value,
+                    "telephone": document.getElementById('rea-phone').value,
+                    "email": document.getElementById('rea-email').value,
+                    "worksFor": {
+                        "@type": "RealEstateAgent",
+                        "name": document.getElementById('rea-agency-name').value,
+                        "url": document.getElementById('rea-agency-url').value,
+                        "telephone": document.getElementById('rea-agency-phone').value,
+                        "image": document.getElementById('rea-agency-image').value,
+                        "priceRange": document.getElementById('rea-agency-pricerange').value,
+                        "address": {
+                            "@type": "PostalAddress",
+                            "streetAddress": document.getElementById('rea-street').value,
+                            "addressLocality": document.getElementById('rea-city').value,
+                            "addressRegion": document.getElementById('rea-state').value,
+                            "postalCode": document.getElementById('rea-postal').value,
+                            "addressCountry": document.getElementById('rea-country').value
+                        }
+                    },
+                    "mainEntityOfPage": document.getElementById('rea-main-entity').value,
+                    "description": document.getElementById('rea-description').value
+                };
+                const reaSocialUrls = Array.from(document.querySelectorAll('#rea-social-profiles-container .social-profile-input')).map(input => input.value.trim()).filter(Boolean);
+                if (reaSocialUrls.length > 0) schema.sameAs = reaSocialUrls;
+                break;
+               
+            case 'realEstateListing':
+                 schema = {
+                    "@context": "https://schema.org", "@type": "RealEstateListing",
+                    "name": document.getElementById('rel-name').value,
+                    "url": document.getElementById('rel-url').value,
+                    "image": document.getElementById('rel-image').value,
+                    "description": document.getElementById('rel-desc').value,
+                    "address": {
+                        "@type": "PostalAddress",
+                        "streetAddress": document.getElementById('rel-street').value,
+                        "addressLocality": document.getElementById('rel-city').value,
+                        "addressRegion": document.getElementById('rel-state').value,
+                        "postalCode": document.getElementById('rel-postal').value,
+                        "addressCountry": document.getElementById('rel-country').value
+                    },
+                    "offers": {
+                        "@type": "Offer",
+                        "price": document.getElementById('rel-price').value,
+                        "priceCurrency": document.getElementById('rel-currency').value,
+                        "availability": "https://schema.org/InStock"
+                    }
+                };
+                break;
+               
+            case 'localBusiness':
+                schema = {
+                    "@context": "https://schema.org", "@type": document.getElementById('lb-type').value,
+                    "name": document.getElementById('lb-name').value,
+                    "url": document.getElementById('lb-url').value,
+                    "logo": document.getElementById('lb-image').value,
+                    "image": document.getElementById('lb-image').value,
+                    "telephone": document.getElementById('lb-phone').value,
+                    "priceRange": document.getElementById('lb-price-range').value,
+                    "address": {
+                        "@type": "PostalAddress",
+                        "streetAddress": document.getElementById('lb-street').value,
+                        "addressLocality": document.getElementById('lb-city').value,
+                        "addressRegion": document.getElementById('lb-state').value,
+                        "postalCode": document.getElementById('lb-postal').value,
+                        "addressCountry": document.getElementById('lb-country').value
+                    },
+                };
+                const lbSocialUrls = Array.from(document.querySelectorAll('#lb-social-profiles-container .social-profile-input')).map(input => input.value.trim()).filter(Boolean);
+                if (lbSocialUrls.length > 0) schema.sameAs = lbSocialUrls;
+
+                const openingHoursSpec = [];
+                const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                daysOfWeek.forEach(day => {
+                    if (document.getElementById(`hours-active-${day}`).checked) {
+                        const openTime = document.getElementById(`hours-open-${day}`).value;
+                        const closeTime = document.getElementById(`hours-close-${day}`).value;
+                        if (openTime && closeTime) {
+                            openingHoursSpec.push({
+                                "@type": "OpeningHoursSpecification",
+                                "dayOfWeek": `https://schema.org/${day}`,
+                                "opens": openTime,
+                                "closes": closeTime
+                            });
+                        }
+                    }
+                });
+                if (openingHoursSpec.length > 0) schema.openingHoursSpecification = openingHoursSpec;
+                break;
+
+            case 'faqPage':
+                const faqItems = Array.from(document.querySelectorAll('#faq-items-container .dynamic-item'));
+                const mainEntity = faqItems.map(item => {
+                    const question = item.querySelector('.faq-question').value.trim();
+                    const answer = item.querySelector('.faq-answer').value.trim();
+                    if (question && answer) {
+                        return {
+                            "@type": "Question",
+                            "name": question,
+                            "acceptedAnswer": { "@type": "Answer", "text": answer }
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+                schema = {
+                    "@context": "https://schema.org", "@type": "FAQPage",
+                    "mainEntity": mainEntity
+                };
+                break;
+
+            case 'breadcrumbList':
+                const breadcrumbItems = Array.from(document.querySelectorAll('#breadcrumb-items-container .dynamic-item'));
+                const itemListElement = breadcrumbItems.map((item, index) => {
+                    const name = item.querySelector('.breadcrumb-name').value.trim();
+                    const url = item.querySelector('.breadcrumb-url').value.trim();
+                    if (name && url) {
+                        return {
+                            "@type": "ListItem",
+                            "position": index + 1,
+                            "name": name,
+                            "item": url
+                        };
+                    }
+                    return null;
+                }).filter(Boolean);
+                 schema = {
+                    "@context": "https://schema.org", "@type": "BreadcrumbList",
+                    "itemListElement": itemListElement
+                };
+                break;
+        }
+       
+        const cleanSchema = (obj) => {
+            Object.keys(obj).forEach(key => {
+                if (obj[key] && typeof obj[key] === 'object') {
+                    if (Array.isArray(obj[key]) && obj[key].length === 0) {
+                        delete obj[key];
+                    } else {
+                         cleanSchema(obj[key]);
+                         if (Object.keys(obj[key]).length === 0 && !Array.isArray(obj[key])) {
+                             delete obj[key];
+                         }
+                    }
+                } else if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+                    delete obj[key];
+                }
+            });
+            return obj;
+        };
+
+        const finalSchema = cleanSchema(schema);
+        const codeBlock = document.getElementById('schema-code-block');
+        const scriptTag = `<script type="application/ld+json">\n${JSON.stringify(finalSchema, null, 2)}\n<\/script>`;
+        codeBlock.textContent = scriptTag;
+    }
+
+</script>
+
+</body>
+</html>
